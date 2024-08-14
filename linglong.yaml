@@ -1,0 +1,60 @@
+version: "1"
+
+package:
+  id: org.notabug.Snowboarder
+  name: Snowboarder
+  version: 3.0.0.0
+  kind: app
+  description: |
+     Use your keyboard arrow keys to move from left to right or left and right click.
+
+base: org.deepin.foundation/23.0.0
+runtime: org.deepin.Runtime/23.0.1
+
+command:
+  - /opt/apps/org.notabug.Snowboarder/files/bin/snowboarder
+
+sources:
+  - kind: git
+    url: https://notabug.org/Vandarin/Snowboarder.git
+    version: master
+    commit: 442b98a24fd9513905b92de3faac7b00a82442b5
+
+  - kind: git
+    url: https://github.com/upx/upx.git
+    version: master
+    commit: 1427b8137a6a3fcbf541e529d9de349230f4ebae
+
+  - kind: git
+    url: https://github.com/libsdl-org/SDL.git
+    version: master
+    commit: 155c3bb0a33a842d23f3dafc9bf541f0973cd686
+
+
+
+build: |
+
+  cd /project/linglong/sources/SDL.git/
+  cmake -Bbuild \
+        -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+        -DCMAKE_INSTALL_LIBDIR=${PREFIX}/lib/${TRIPLET}
+  cmake --build build
+  cmake --build build --target install
+
+  cd /project/linglong/sources/upx.git/
+  cmake -Bbuild \
+        -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+        -DCMAKE_INSTALL_LIBDIR=${PREFIX}/lib/${TRIPLET}
+  cmake --build build
+  cmake --build build --target install
+  
+  cd /project/linglong/sources/Snowboarder.git/
+  gcc main.c -I${PREFIX}/include -I inc -Ofast -lm -lSDL2 -lGLESv2 -lEGL -o snowboarder
+  strip --strip-unneeded snowboarder
+  upx --lzma --best snowboarder
+  mkdir -p ${PREFIX}/bin
+  mkdir -p ${PREFIX}/share/applications/
+  mkdir -p ${PREFIX}/share/icons/hicolor/192x192/apps/
+  cp snowboarder ${PREFIX}/bin/snowboarder
+  cp flatpak/snowboarder.desktop ${PREFIX}/share/applications/snowboarder.desktop
+  cp flatpak/snowboarder.png ${PREFIX}/share/icons/hicolor/192x192/apps/snowboarder.png
